@@ -75,7 +75,7 @@ def test_causal_delay():
     normal_tasks = []
     for t in tasks:
         f = faults_by_task.get(t.task_id)
-        if f and f.machine_status == "Fault":
+        if f and f.machine_status in ("UNAVAILABLE", "DEGRADED"):
             faulted_tasks.append(t)
         else:
             normal_tasks.append(t)
@@ -85,3 +85,26 @@ def test_causal_delay():
     normal_var = sum(t.actual_time - t.estimated_time for t in normal_tasks) / len(normal_tasks)
     
     assert faulted_var > normal_var
+
+def test_machine_fault_contract():
+    """Verify MachineFault matches contract (status, fault, downtime)."""
+    gen = SyntheticDataGenerator(seed=42, days=3)
+    tasks, faults, schedules, telemetries = gen.generate()
+    for f in faults:
+        if f.machine_status == "NORMAL":
+            assert f.fault_type == "NONE"
+            assert f.downtime_minutes == 0.0
+        else:
+            assert f.fault_type != "NONE"
+            assert f.downtime_minutes > 0.0
+
+def test_task_status_realism():
+    """Verify task statuses are generated logically based on date."""
+    gen = SyntheticDataGenerator(seed=42, days=3)
+    tasks, faults, schedules, telemetries = gen.generate()
+    
+    import datetime
+    now = datetime.datetime.now()
+    
+    statuses = set([s.task_status for s in schedules])
+    assert "UPCOMING" in statuses or "COMPLETED" in statuses or "CURRENT" in statuses

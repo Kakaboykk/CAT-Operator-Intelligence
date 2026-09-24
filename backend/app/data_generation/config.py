@@ -71,11 +71,11 @@ TASKS = [
 ]
 
 FAULTS = [
-    FaultProfile("Hydraulic Fault", downtime_mean=15.0, downtime_std=3.0),
-    FaultProfile("Engine Fault", downtime_mean=30.0, downtime_std=5.0),
-    FaultProfile("Transmission Fault", downtime_mean=45.0, downtime_std=10.0),
-    FaultProfile("Electrical Fault", downtime_mean=20.0, downtime_std=4.0),
-    FaultProfile("Cooling System Fault", downtime_mean=25.0, downtime_std=5.0),
+    FaultProfile("HYDRAULIC_FAULT", downtime_mean=15.0, downtime_std=3.0),
+    FaultProfile("ENGINE_FAULT", downtime_mean=30.0, downtime_std=5.0),
+    FaultProfile("FUNCTION_FAILURE", downtime_mean=45.0, downtime_std=10.0),
+    FaultProfile("OTHER", downtime_mean=20.0, downtime_std=4.0),
+    FaultProfile("TIRE_PUNCTURE", downtime_mean=25.0, downtime_std=5.0),
 ]
 
 WEATHER_CONDITIONS = ["Clear", "Cloudy", "Rainy", "Windy"]

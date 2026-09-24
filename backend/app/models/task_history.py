@@ -42,6 +42,22 @@ class TaskHistory(Base):
         comment="Surrogate primary key (UUID v4)",
     )
 
+    # ── Source: "Machine ID" ──────────────────────────────────────────────────
+    machine_id = Column(
+        String(100),
+        nullable=False,
+        index=True,
+        comment="Specification field: Machine ID",
+    )
+
+    # ── Source: "Operator ID" ─────────────────────────────────────────────────
+    operator_id = Column(
+        String(100),
+        nullable=False,
+        index=True,
+        comment="Specification field: Operator ID",
+    )
+
     # ── Source: "Task ID" ─────────────────────────────────────────────────────
     task_id = Column(
         String(100),

@@ -21,6 +21,8 @@ class TaskHistoryBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     task_id: str = Field(..., min_length=1, description="Source: Task ID")
+    machine_id: str = Field(..., min_length=1, description="Specification: Machine ID")
+    operator_id: str = Field(..., min_length=1, description="Specification: Operator ID")
     task_type: str = Field(..., min_length=1, description="Source: Task Type")
     weather: str = Field(..., description="Source: Weather")
     operator_skill: str = Field(..., description="Source: Operator Skill")
@@ -28,7 +30,7 @@ class TaskHistoryBase(BaseModel):
     estimated_time: float = Field(..., ge=0, description="Source: Estimated Time (hours)")
     actual_time: float = Field(..., ge=0, description="Source: Actual Time (hours)")
 
-    @field_validator("task_id", "task_type")
+    @field_validator("task_id", "machine_id", "operator_id", "task_type")
     @classmethod
     def validate_non_empty(cls, v: str) -> str:
         if not v.strip():

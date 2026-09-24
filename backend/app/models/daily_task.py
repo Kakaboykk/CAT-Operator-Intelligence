@@ -93,10 +93,10 @@ class DailyTaskSchedule(Base):
     task_status = Column(
         String(50),
         nullable=False,
-        default="Scheduled",
+        default="UPCOMING",
         comment=(
             "Specification field: Task Status — "
-            "e.g. 'Scheduled', 'In Progress', 'Completed', 'Cancelled'"
+            "e.g. 'UPCOMING', 'CURRENT', 'COMPLETED', 'DELAYED', 'CANCELLED'"
         ),
     )
 

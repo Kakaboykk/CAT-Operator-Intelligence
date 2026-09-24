@@ -25,6 +25,8 @@ def build_dataset(db: Session) -> pd.DataFrame:
     # Convert to DataFrames
     tasks_df = pd.DataFrame([{
         "task_id": t.task_id,
+        "machine_id": t.machine_id,
+        "operator_id": t.operator_id,
         "actual_time": t.actual_time,
         "estimated_time": t.estimated_time,
         "task_type": t.task_type,
@@ -35,8 +37,6 @@ def build_dataset(db: Session) -> pd.DataFrame:
     
     schedules_df = pd.DataFrame([{
         "task_id": s.task_id,
-        "operator_id": s.operator_id,
-        "machine_id": s.machine_id,
         "scheduled_date": s.scheduled_date,
         "scheduled_time": s.scheduled_time
     } for s in schedules_query])
@@ -45,7 +45,7 @@ def build_dataset(db: Session) -> pd.DataFrame:
     faults_df = pd.DataFrame([{
         "task_id": f.task_id,
         "machine_status": f.machine_status
-    } for f in faults_query if f.machine_status != 'Operational'])
+    } for f in faults_query if f.machine_status != 'NORMAL'])
     
     # Incidents linked to operator and time
     incidents_df = pd.DataFrame([{

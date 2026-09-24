@@ -17,6 +17,14 @@ interface DashboardStats {
   current_task_time?: string | null;
   machine_status?: string | null;
   safety_status?: string | null;
+  scheduled_start_time?: string | null;
+  planned_duration_minutes?: number | null;
+  predicted_duration_minutes?: number | null;
+  expected_finish_time?: string | null;
+  duration_difference_minutes?: number | null;
+  fault_type?: string | null;
+  machine_downtime_minutes?: number | null;
+  task_timing_status?: string | null;
 }
 
 interface Recommendation {
@@ -96,20 +104,61 @@ export default function Dashboard() {
                 Unable to load
               </p>
             ) : stats?.current_task_title ? (
-              <>
+              <div className="w-full">
                 <p className="text-lg font-bold text-slate-800">
                   {stats.current_task_title}
                 </p>
 
-                {stats.current_task_time && (
-                  <p className="text-xs text-slate-400">
+                {stats.scheduled_start_time ? (
+                  <div className="mt-4 space-y-2 text-sm text-slate-600 w-full min-w-[200px]">
+                    <div className="flex justify-between border-b border-slate-100 pb-1">
+                      <span className="font-medium text-slate-500">Scheduled Start:</span>
+                      <span className="font-semibold">{stats.scheduled_start_time}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-slate-100 pb-1">
+                      <span className="font-medium text-slate-500">Planned Duration:</span>
+                      <span className="font-semibold">{stats.planned_duration_minutes} min</span>
+                    </div>
+                    <div className="flex justify-between border-b border-slate-100 pb-1">
+                      <span className="font-medium text-slate-500">AI Prediction:</span>
+                      <span className="font-semibold">
+                        {stats.predicted_duration_minutes != null 
+                          ? `${stats.predicted_duration_minutes} min` 
+                          : 'AI estimate unavailable'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between border-b border-slate-100 pb-1">
+                      <span className="font-bold text-slate-800">Expected Finish:</span>
+                      <span className="font-bold text-slate-800">
+                        {stats.expected_finish_time || 'unavailable'}
+                      </span>
+                    </div>
+                    {stats.duration_difference_minutes != null && (
+                      <div className="flex justify-between pt-1">
+                        <span className="font-medium text-slate-500">Difference:</span>
+                        <span className={`font-bold ${
+                          stats.task_timing_status === 'LONGER_THAN_PLANNED' ? 'text-amber-600' :
+                          stats.task_timing_status === 'SHORTER_THAN_PLANNED' ? 'text-emerald-600' :
+                          'text-blue-600'
+                        }`}>
+                          {stats.duration_difference_minutes > 0 ? '+' : ''}{stats.duration_difference_minutes} min{' '}
+                          <span className="font-normal text-xs">
+                            ({stats.task_timing_status === 'LONGER_THAN_PLANNED' ? 'Longer than planned' : 
+                              stats.task_timing_status === 'SHORTER_THAN_PLANNED' ? 'Shorter than planned' : 'On plan'})
+                          </span>
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 mt-1">
                     {stats.current_task_time}
                   </p>
                 )}
-              </>
+              </div>
             ) : (
               <p className="text-lg font-medium text-slate-600">
-                No scheduled tasks
+                No current task
               </p>
             )}
           </div>
@@ -135,9 +184,24 @@ export default function Dashboard() {
                 Unable to load
               </p>
             ) : (
-              <p className="text-lg font-bold text-slate-800">
-                {stats?.machine_status || 'No machine status available'}
-              </p>
+              <div>
+                <p className={`text-lg font-bold ${
+                  stats?.machine_status === 'NORMAL' ? 'text-emerald-600' :
+                  stats?.machine_status === 'DEGRADED' ? 'text-amber-600' :
+                  stats?.machine_status === 'UNAVAILABLE' ? 'text-red-600' :
+                  'text-slate-800'
+                }`}>
+                  {stats?.machine_status || 'No machine status available'}
+                </p>
+                {(stats?.machine_status === 'DEGRADED' || stats?.machine_status === 'UNAVAILABLE') && (
+                  <div className="mt-2 text-sm text-slate-600">
+                    <p><span className="font-medium text-slate-500">Fault:</span> {stats.fault_type?.replace(/_/g, ' ')}</p>
+                    {stats.machine_downtime_minutes != null && stats.machine_downtime_minutes > 0 && (
+                      <p><span className="font-medium text-slate-500">Downtime:</span> {stats.machine_downtime_minutes} min</p>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>

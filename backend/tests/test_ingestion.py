@@ -48,10 +48,10 @@ Timestamp,Machine ID,Operator ID,Engine Hours,Fuel Used,Load Cycles,Idling Time,
 """
 
 TASK_HISTORY_CSV_CONTENT = """\
-Task ID,Task Type,Weather,Operator Skill,Machine Age,Estimated Time,Actual Time
-TASK-001,Excavation,Clear,Intermediate,3.5,4.0,4.5
-TASK-002,Loading,Rainy,Expert,5.0,2.0,2.8
-TASK-003,Grading,Cloudy,Beginner,1.0,6.0,8.0
+Task ID,Machine ID,Operator ID,Task Type,Weather,Operator Skill,Machine Age,Estimated Time,Actual Time
+TASK-001,MACHINE-001,OP-001,Excavation,Clear,Intermediate,3.5,4.0,4.5
+TASK-002,MACHINE-002,OP-002,Loading,Rainy,Expert,5.0,2.0,2.8
+TASK-003,MACHINE-003,OP-003,Grading,Cloudy,Beginner,1.0,6.0,8.0
 """
 
 

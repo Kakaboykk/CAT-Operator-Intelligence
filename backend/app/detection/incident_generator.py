@@ -81,5 +81,5 @@ def create_incident_record(
         "event_type": event_type,
         "severity": severity,
         "description": description,
-        "status": "Open"
+        "status": "Active"
     }

@@ -17,7 +17,7 @@ IMPORTANT — Phase 1 scope:
     - fault severity intelligence
     - fault diagnosis
   The schema supports both normal-operation and fault-event rows.
-  Example hard-coded events (e.g. Hydraulic Fault → 15 min) belong
+  Example hard-coded events (e.g. Hydraulic Fault -> 15 min) belong
   to Phase 2 synthetic-data generation, NOT here.
 """
 
@@ -41,7 +41,7 @@ class MachineFault(Base):
     __tablename__ = "machine_fault"
 
     __table_args__ = (
-        CheckConstraint("downtime >= 0", name="ck_machine_fault_downtime_non_negative"),
+        CheckConstraint("downtime_minutes >= 0", name="ck_machine_fault_downtime_non_negative"),
     )
 
     # ── Primary key ───────────────────────────────────────────────────────────
@@ -68,18 +68,18 @@ class MachineFault(Base):
     machine_status = Column(
         String(100),
         nullable=False,
-        comment="Source field: Machine Status — e.g. 'Operational', 'Fault', 'Maintenance'",
+        comment="Source field: Machine Status — e.g. 'NORMAL', 'DEGRADED', 'UNAVAILABLE'",
     )
 
     # ── Source: "Fault Type" ──────────────────────────────────────────────────
     fault_type = Column(
         String(200),
         nullable=True,
-        comment="Source field: Fault Type — null when machine_status is 'Operational'",
+        comment="Source field: Fault Type — e.g. 'NONE', 'TIRE_PUNCTURE', 'HYDRAULIC_FAULT', etc.",
     )
 
     # ── Source: "Downtime" ────────────────────────────────────────────────────
-    downtime = Column(
+    downtime_minutes = Column(
         Float,
         nullable=False,
         default=0.0,

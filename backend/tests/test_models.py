@@ -59,6 +59,8 @@ def make_telemetry(**overrides) -> dict:
 def make_task_history(**overrides) -> dict:
     base = {
         "task_id": f"TASK-{uuid.uuid4().hex[:6]}",
+        "machine_id": "MACHINE-001",
+        "operator_id": "OP-001",
         "task_type": "Excavation",
         "weather": "Clear",
         "operator_skill": "Intermediate",
@@ -131,7 +133,7 @@ def test_valid_machine_fault_insert(db):
         "task_id": task.task_id,
         "machine_status": "Fault",
         "fault_type": "Hydraulic Leak",
-        "downtime": 30.0,
+        "downtime_minutes": 30.0,
     }
     obj = MachineFault(**MachineFaultCreate(**data).model_dump())
     db.add(obj)
@@ -139,7 +141,7 @@ def test_valid_machine_fault_insert(db):
 
     fetched = db.query(MachineFault).filter_by(id=obj.id).first()
     assert fetched is not None
-    assert fetched.downtime == 30.0
+    assert fetched.downtime_minutes == 30.0
     assert fetched.machine_status == "Fault"
 
 
@@ -148,7 +150,7 @@ def test_machine_fault_operational_no_fault_type(db):
         "task_id": None,
         "machine_status": "Operational",
         "fault_type": None,
-        "downtime": 0.0,
+        "downtime_minutes": 0.0,
     }
     obj = MachineFault(**MachineFaultCreate(**data).model_dump())
     db.add(obj)
@@ -234,7 +236,7 @@ def test_machine_fault_negative_downtime_rejected():
             task_id=None,
             machine_status="Fault",
             fault_type="Engine",
-            downtime=-1.0,
+            downtime_minutes=-1.0,
         )
 
 
@@ -311,7 +313,7 @@ def test_downtime_non_negative_db_constraint(db, engine):
         obj = MachineFault(
             id=uuid.uuid4(),
             machine_status="Fault",
-            downtime=-5.0,
+            downtime_minutes=-5.0,
         )
         db.add(obj)
         with pytest.raises(IntegrityError):

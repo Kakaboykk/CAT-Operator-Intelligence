@@ -66,7 +66,8 @@ class SyntheticDataGenerator:
         """Run the full generation pipeline in FK-safe order."""
         start_date = date.today() - timedelta(days=self.days)
 
-        for day_offset in range(self.days):
+        # Generate past days + today + tomorrow
+        for day_offset in range(self.days + 2):
             current_date = start_date + timedelta(days=day_offset)
             self._generate_day(current_date)
 
@@ -79,12 +80,26 @@ class SyntheticDataGenerator:
         # Randomly assign 2-4 operators per day
         active_operators = random.sample(OPERATORS, random.randint(2, len(OPERATORS)))
         
+        now = datetime.now()
+        is_today = (current_date == now.date())
+        
+        if is_today:
+            # Ensure OP1003 is active today for the demo scenario
+            demo_op = next((o for o in OPERATORS if o.op_id == "OP1003"), None)
+            if demo_op and demo_op not in active_operators:
+                active_operators.append(demo_op)
+        
         for op in active_operators:
             # Operator might do 1-2 tasks a day
             num_tasks = random.randint(1, 2)
             for task_idx in range(num_tasks):
+                is_demo_task = (is_today and op.op_id == "OP1003" and task_idx == 0)
+
                 # Pick machine and task type
                 machine = random.choice(MACHINES)
+                if is_demo_task:
+                    machine = next((m for m in MACHINES if m.machine_id == "EXC003"), machine)
+                    
                 task_profile = random.choice(TASKS)
                 weather = random.choices(WEATHER_CONDITIONS, weights=WEATHER_PROBABILITIES)[0]
                 self.stats["weather_distribution"][weather] += 1
@@ -108,31 +123,40 @@ class SyntheticDataGenerator:
 
                 # 2. Determine Faults & Downtime
                 has_fault = random.random() < 0.1  # 10% chance of fault
+                if is_demo_task:
+                    has_fault = True
+                    
                 downtime_minutes = 0.0
                 
                 if has_fault:
-                    fault_profile = random.choice(FAULTS)
-                    downtime_minutes = max(5.0, random.gauss(fault_profile.downtime_mean, fault_profile.downtime_std))
+                    if is_demo_task:
+                        fault_profile = next((f for f in FAULTS if f.fault_type == "HYDRAULIC_FAULT"), FAULTS[0])
+                        downtime_minutes = 13.0
+                    else:
+                        fault_profile = random.choice(FAULTS)
+                        downtime_minutes = max(5.0, random.gauss(fault_profile.downtime_mean, fault_profile.downtime_std))
+                        
                     self.stats["fault_count"] += 1
                     self.stats["tasks_affected_by_faults"] += 1
                     self.stats["fault_distribution"][fault_profile.fault_type] += 1
                     self.stats["total_downtime"] += downtime_minutes
                     
+                    machine_status = "UNAVAILABLE" if downtime_minutes > 20 else "DEGRADED"
                     self.machine_faults.append(MachineFault(
                         id=self._next_uuid(),
                         task_id=task_id,
-                        machine_status="Fault",
+                        machine_status=machine_status,
                         fault_type=fault_profile.fault_type,
-                        downtime=downtime_minutes
+                        downtime_minutes=downtime_minutes
                     ))
                 else:
                     self.stats["operational_count"] += 1
                     self.machine_faults.append(MachineFault(
                         id=self._next_uuid(),
                         task_id=task_id,
-                        machine_status="Operational",
-                        fault_type=None,
-                        downtime=0.0
+                        machine_status="NORMAL",
+                        fault_type="NONE",
+                        downtime_minutes=0.0
                     ))
 
                 # Calculate actual time: Explicit causal relationship
@@ -153,13 +177,46 @@ class SyntheticDataGenerator:
                     operator_skill=op.skill,
                     machine_age=machine.age,
                     estimated_time=est_time,
-                    actual_time=actual_time
+                    actual_time=actual_time,
+                    machine_id=machine.machine_id,
+                    operator_id=op.op_id
                 )
                 self.task_histories.append(task_history)
 
                 # 3. Daily Task Schedule
                 start_hour = 8 + (task_idx * 5) # e.g. 8 AM or 1 PM
                 sched_time = time(hour=start_hour, minute=0)
+                
+                now = datetime.now()
+                
+                if is_demo_task:
+                    # Guarantee it is CURRENT right now
+                    # We want task_datetime <= now <= task_end_time
+                    # actual_time is around 4-5 hours. Set start 1 hour ago (or exactly now if early).
+                    hours_to_subtract = 1.0 if now.hour >= 1 else 0.0
+                    sched_time = (now - timedelta(hours=hours_to_subtract)).time()
+                
+                # Compare to current time to determine realistic status
+                task_datetime = datetime.combine(current_date, sched_time)
+                
+                if current_date < now.date():
+                    task_status = "COMPLETED"
+                elif current_date == now.date():
+                    # For today, check against current time
+                    # Let's say task lasts actual_time hours
+                    task_end_time = task_datetime + timedelta(hours=actual_time)
+                    if now < task_datetime:
+                        task_status = "UPCOMING"
+                    elif task_datetime <= now <= task_end_time:
+                        task_status = "CURRENT"
+                    else:
+                        # It's past the end time.
+                        if downtime_minutes > 60:
+                            task_status = "DELAYED"
+                        else:
+                            task_status = "COMPLETED"
+                else:
+                    task_status = "UPCOMING"
                 
                 self.daily_schedules.append(DailyTaskSchedule(
                     schedule_id=self._next_uuid(),
@@ -168,7 +225,7 @@ class SyntheticDataGenerator:
                     machine_id=machine.machine_id,
                     scheduled_date=current_date,
                     scheduled_time=sched_time,
-                    task_status="Completed"
+                    task_status=task_status
                 ))
 
                 # 4. Generate Telemetry for this session

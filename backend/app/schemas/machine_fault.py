@@ -19,7 +19,7 @@ class MachineFaultBase(BaseModel):
     task_id: str | None = Field(None, description="Source: Task ID (optional)")
     machine_status: str = Field(..., description="Source: Machine Status")
     fault_type: str | None = Field(None, description="Source: Fault Type (null when operational)")
-    downtime: float = Field(..., ge=0, description="Source: Downtime (minutes, must be >= 0)")
+    downtime_minutes: float = Field(..., ge=0, description="Source: Downtime (minutes, must be >= 0)")
 
     @field_validator("machine_status")
     @classmethod

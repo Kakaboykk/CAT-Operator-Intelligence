@@ -56,6 +56,8 @@ TELEMETRY_COLUMN_MAP: dict[str, str] = {
 
 TASK_HISTORY_COLUMN_MAP: dict[str, str] = {
     "Task ID": "task_id",
+    "Machine ID": "machine_id",
+    "Operator ID": "operator_id",
     "Task Type": "task_type",
     "Weather": "weather",
     "Operator Skill": "operator_skill",

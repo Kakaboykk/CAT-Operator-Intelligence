@@ -96,8 +96,8 @@ class Incident(Base):
     status = Column(
         String(50),
         nullable=False,
-        default="Open",
-        comment="Specification field: Status — e.g. 'Open', 'Acknowledged', 'Resolved'",
+        default="Active",
+        comment="Specification field: Status — e.g. 'Active', 'Resolved', 'Historical'",
     )
 
     def __repr__(self) -> str:
